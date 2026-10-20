@@ -1,0 +1,30 @@
+{
+  "storage_id": "file_edaf236e1e184f18a9de889ea25e336a",
+  "expected_shard_count": 3,
+  "shard_order": [
+    1,
+    2,
+    3
+  ],
+  "shards": [
+    {
+      "index": 1,
+      "filename": "shard_1.enc",
+      "size_bytes": 62,
+      "sha256": "bc7741a7c28c01cf8f8db425b183dfcd6241849b4c8ba158002c2f2aba45b22d"
+    },
+    {
+      "index": 2,
+      "filename": "shard_2.enc",
+      "size_bytes": 61,
+      "sha256": "32e86133352d4a0ecfccbdb5e4a0819108ef93b651cf91a493152250f293f1b9"
+    },
+    {
+      "index": 3,
+      "filename": "shard_3.enc",
+      "size_bytes": 61,
+      "sha256": "d2dcbf1a2d45ef2f2e922fe75f381bf670fa658832b89e4fd4c5cea4bb45a945"
+    }
+  ],
+  "original_filename": "quantum_secrets.dat"
+}
