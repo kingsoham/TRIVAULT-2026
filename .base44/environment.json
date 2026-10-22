@@ -1,0 +1,19 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d --build",
+  "secrets": [
+    {
+      "name": "JWT_SECRET_KEY",
+      "description": "Signs TriVault session JWTs. A development placeholder is committed in .env.base44-defaults (>=32 chars) so the app boots with no credentials; replace it with your own generated value (python -c \"import secrets; print(secrets.token_urlsafe(32))\", or openssl rand -hex 32) before any real deployment.",
+      "requiredAtBoot": true,
+      "generatedForDevelopment": true
+    },
+    {
+      "name": "FERNET_ENCRYPTION_KEY",
+      "description": "Fernet key (32 url-safe base64 bytes) used to encrypt uploaded files. A development placeholder is committed in .env.base44-defaults; replace it with your own Fernet.generate_key() before any real deployment. Changing it makes previously stored shards undecryptable.",
+      "requiredAtBoot": true,
+      "generatedForDevelopment": true
+    }
+  ]
+}

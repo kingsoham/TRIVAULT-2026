@@ -1,0 +1,12 @@
+# Runtime image for the TriVault FastAPI backend in the Base44 sandbox.
+# Backend dependencies are installed here (image layer); the application source
+# is bind-mounted at /app so edits are picked up by uvicorn --reload.
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY backend/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt

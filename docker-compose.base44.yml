@@ -1,0 +1,92 @@
+# TriVault — Base44 sandbox development environment.
+#
+# Runs the cloned source with live reload (no prebuilt application images):
+#   web  -> host port 3000  : Vite dev server (React + TypeScript SPA, port 5173 in-container)
+#   api  -> host port 8000  : uvicorn --reload (FastAPI, Swagger UI on /docs, /health)
+#
+#   docker compose -f docker-compose.base44.yml up -d --build
+name: trivault
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: .base44/Dockerfile.api
+    restart: on-failure
+    working_dir: /app
+    command: ["sh", "-ec", "exec uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000 --reload"]
+    volumes:
+      - ./:/app
+      # SQLite metadata DB + encrypted shard storage live outside the repo.
+      - trivault_data:/data
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=development
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+      - DATABASE_URL=sqlite:////data/app.db
+      - STORAGE_ROOT=/data/storage
+      - MAX_UPLOAD_SIZE_BYTES=26214400
+      - PYTHONUNBUFFERED=1
+      # The SPA runs on host 3000 (separate origin) and sends a Bearer token, so the
+      # API needs the preview origin in its CORS allowlist. Never hardcode the host.
+      - ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,https://3000-${BASE44_PUBLIC_HOST_SUFFIX}
+    env_file:
+      # First: committed development placeholders (never outrank a real secret).
+      - ./.env.base44-defaults
+      # Last: platform-delivered secrets — a value from the Secrets page always wins.
+      - /run/base44/app.env
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    labels:
+      base44.project: "TriVault API"
+      base44.kind: "api"
+      base44.port: "8000"
+      base44.docs: "/docs"
+
+  web:
+    image: node:22
+    restart: on-failure
+    working_dir: /app/frontend
+    # Dependencies are installed from the mounted lockfile at startup, then the dev server runs.
+    command: ["sh", "-ec", "npm ci --no-audit --no-fund && exec npm run dev -- --host 0.0.0.0 --port 5173 --strictPort"]
+    volumes:
+      - ./:/app
+    ports:
+      - "3000:5173"
+    environment:
+      # Passed through so vite.config.ts can allow the sandbox preview host.
+      - BASE44_PREVIEW_MODE
+      - BASE44_SANDBOX_HOST_DOMAIN
+      - BASE44_PUBLIC_HOST_SUFFIX
+      - VITE_API_BASE_URL=https://8000-${BASE44_PUBLIC_HOST_SUFFIX}
+      - NPM_CONFIG_UPDATE_NOTIFIER=false
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:5173/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 180s
+    labels:
+      base44.project: "TriVault Web"
+      base44.kind: "web"
+      base44.port: "3000"
+
+volumes:
+  trivault_data:
