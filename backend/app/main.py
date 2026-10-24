@@ -7,19 +7,23 @@ from app.config import get_settings
 from app.database import init_db, get_engine
 from app.routes.auth import router as auth_router
 from app.routes.files import router as files_router
+from app.seed import seed_demo_data
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     Lifespan context manager that validates settings and initializes
-    the SQLite database tables on startup.
+    the SQLite database tables on startup, then seeds demo data in
+    development mode if the database is empty.
     """
     settings = get_settings()
     # Ensure storage root exists
     _ = settings.storage_path
     # Initialize SQLite tables
     init_db()
+    # Auto-seed demo users and files in development (idempotent)
+    seed_demo_data()
     yield
 
 
