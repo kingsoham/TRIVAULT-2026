@@ -12,6 +12,8 @@ docker compose -f docker-compose.base44.yml up -d --build
 
 * `web` — host port **3000** → Vite dev server on 5173 (the preview entry point).
 * `api` — host port **8000** → uvicorn `--reload`, Swagger at `/docs`, health at `/health`.
+* `dbviewer` — host port **8010** → `sqlite-web` in read-only mode against the live `/data/app.db`
+  (lets you browse usernames/emails/metadata in the browser; password hashes are visible but unreadable).
 
 Both services bind-mount the repo (`/app`) and run dev servers, so edits apply without
 rebuilding images. Only `backend/requirements.txt` changes need a rebuild (baked into
